@@ -4,7 +4,7 @@ use HTTP::Proxy ':log';
 use HTTP::Proxy::HeaderFilter::simple;
 
 my $proxy = HTTP::Proxy->new(
-    port => 8080,
+    port => $ARGV[0] || 8080,
     logmask => STATUS | PROCESS,
 );
 
