@@ -12,11 +12,6 @@ use warnings;
 use App::http2http;
 
 
-my $proxy = App::http2http->new(
-    host => '127.0.0.1',
-    port => 8080,
-    via => undef,
-    x_forwarded_for => undef,
-);
+my $proxy = App::http2http->new;
 
 $proxy->start;

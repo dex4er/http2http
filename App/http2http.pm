@@ -38,10 +38,12 @@ sub new {
     my $name = "http2http";
 
     my ($opt, $usage) = describe_options(
-        "$0 %o <some-arg>",
+        "$0 %o",
         [ 'host|s=s',     "local host bind address", { default => '127.0.0.1' } ],
         [ 'port|p=i',     "local port bind address", { default => 8080 } ],
-        [ 'daemonize|d',  "run as daemon", ],
+        [ 'anonymize|a',  "no Via and X-Forwarded-For headers", ],
+        [ 'eval|e=s',     "filter as Perl eval code", ],
+        [ 'daemonize|D',  "run as daemon", ],
         [ 'uid|U',        "daemon user",             { default => $> } ],
         [ 'gid|G',        "daemon group",            { default => $) } ],
         [ 'pidfile|P=s',  "pid file",                { default => File::Spec->rel2abs("$name.pid") } ],
@@ -67,6 +69,9 @@ sub new {
     };
 
     Log::Log4perl->init( $opt->log4perl || $logconf );
+
+    @args{qw(via x_forwarder_for)} = (undef, undef) if $opt->anonymize;
+    $args{filter} = eval $opt->eval if $opt->eval;
 
     my $self = bless {
         filter => sub { },
@@ -122,7 +127,12 @@ sub start {
         ),
     );
 
-    daemonize( $self->{uid}, $self->{gid}, $self->{pidfile} ) if $self->{daemonize};
+    $proxy->log(PROCESS, "PROCESS", "Staring server at " . $self->{host} . ":" . $self->{port});
+
+    if ($self->{daemonize}) {
+        $proxy->log(PROCESS, "PROCESS", "Daemonizing");
+        daemonize($self->{uid}, $self->{gid}, $self->{pidfile});
+    };
 
     $proxy->start;
 };
