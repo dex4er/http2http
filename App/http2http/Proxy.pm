@@ -33,7 +33,7 @@ sub log {
     my $logger = get_logger($category);
 
     my $message = join '', @_;
-    $message =~ s/\n/ /gs;
+    $message =~ s/\015?\012/ /gs;
 
     $logger->log($level == ERROR ? $ERROR : $INFO, $message);
 };

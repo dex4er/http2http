@@ -17,6 +17,8 @@ our $VERSION = '0.01';
 
 use Log::Log4perl;
 
+use Getopt::Long::Descriptive;
+
 use App::http2http::Proxy;
 
 use HTTP::Proxy ':log';
@@ -26,25 +28,53 @@ use HTTP::Proxy::BodyFilter::complete;
 
 use constant::boolean;
 
+use File::Spec;
+use Net::Server::Daemonize 'daemonize';
+
 
 sub new {
     my ($class, %args) = @_;
 
-    my $conf = q(
-        log4perl.logger                     = DEBUG, Logfile
-        log4perl.appender.Logfile           = Log::Dispatch::File::Stamped
-        log4perl.appender.Logfile.stamp_fmt = %Y-%m-%d-%H
-        log4perl.appender.Logfile.filename  = http2http.log
-        log4perl.appender.Logfile.layout    = PatternLayout
-        log4perl.appender.Logfile.layout.ConversionPattern = %d{ISO8601}: %c: %m{chomp}%n
+    my $name = "http2http";
+
+    my ($opt, $usage) = describe_options(
+        "$0 %o <some-arg>",
+        [ 'host|s=s',     "local host bind address", { default => '127.0.0.1' } ],
+        [ 'port|p=i',     "local port bind address", { default => 8080 } ],
+        [ 'daemonize|d',  "run as daemon", ],
+        [ 'uid|U',        "daemon user",             { default => $> } ],
+        [ 'gid|G',        "daemon group",            { default => $) } ],
+        [ 'pidfile|P=s',  "pid file",                { default => File::Spec->rel2abs("$name.pid") } ],
+        [ 'log4perl|L=s', "log4perl configuration file", ],
+        [ 'help',         "print usage message and exit" ],
     );
 
-    Log::Log4perl->init( \$conf );
+    print($usage->text), exit if $opt->help;
 
-    return bless {
+    my $logger = $opt->daemonize ? 'Logfile' : 'Screen';
+
+    my $logconf = {
+        'log4perl.logger'                     => "DEBUG, $logger",
+        'log4perl.appender.Logfile'           => 'Log::Dispatch::File::Stamped',
+        'log4perl.appender.Logfile.stamp_fmt' => '%Y-%m-%d',
+        'log4perl.appender.Logfile.filename'  => File::Spec->rel2abs("$name.log"),
+        'log4perl.appender.Logfile.layout'    => 'PatternLayout',
+        'log4perl.appender.Logfile.layout.ConversionPattern' => '%d{ISO8601}: %c: %m{chomp}%n',
+        'log4perl.appender.Screen'            => 'Log::Log4perl::Appender::Screen',
+        'log4perl.appender.Screen.stderr'     => 0,
+        'log4perl.appender.Screen.layout'     => 'PatternLayout',
+        'log4perl.appender.Screen.layout.ConversionPattern' => '%d{ISO8601}: %c: %m{chomp}%n',
+    };
+
+    Log::Log4perl->init( $opt->log4perl || $logconf );
+
+    my $self = bless {
         filter => sub { },
+        %$opt,
         %args,
     } => $class;
+
+    return $self;
 };
 
 
@@ -91,6 +121,8 @@ sub start {
             $self->{filter}
         ),
     );
+
+    daemonize( $self->{uid}, $self->{gid}, $self->{pidfile} ) if $self->{daemonize};
 
     $proxy->start;
 };
