@@ -15,8 +15,9 @@ use warnings;
 our $VERSION = '0.01';
 
 
-use constant SERVER_PORT => 8080;
+use Log::Log4perl;
 
+use App::http2http::Proxy;
 
 use HTTP::Proxy ':log';
 use HTTP::Proxy::HeaderFilter::simple;
@@ -28,6 +29,18 @@ use constant::boolean;
 
 sub new {
     my ($class, %args) = @_;
+
+    my $conf = q(
+        log4perl.logger                     = DEBUG, Logfile
+        log4perl.appender.Logfile           = Log::Dispatch::File::Stamped
+        log4perl.appender.Logfile.stamp_fmt = %Y-%m-%d-%H
+        log4perl.appender.Logfile.filename  = http2http.log
+        log4perl.appender.Logfile.layout    = PatternLayout
+        log4perl.appender.Logfile.layout.ConversionPattern = %d{ISO8601}: %c: %m{chomp}%n
+    );
+
+    Log::Log4perl->init( \$conf );
+
     return bless {
         filter => sub { },
         %args,
@@ -38,7 +51,7 @@ sub new {
 sub start {
     my ($self) = @_;
 
-    my $proxy = HTTP::Proxy->new(
+    my $proxy = App::http2http::Proxy->new(
         host => '127.0.0.1',
         port => 8080,
         logmask => PROCESS | SOCKET | STATUS | DATA,

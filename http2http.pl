@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
 
-# HTTP to WS proxy server
+# HTTP to HTTP proxy server
 #
 # Usage:
-#   http2ws.pl [host:port]
+#   http2http.pl [host:port]
 
 
 use strict;
