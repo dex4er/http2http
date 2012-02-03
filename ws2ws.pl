@@ -10,7 +10,7 @@ use App::http2http;
 
 
 sub usage {
-    die "Usage $0 endpoint_hostport default_hostport\n";
+    die "Usage: $0 endpoint_hostport default_hostport\n";
 };
 
 
