@@ -9,11 +9,6 @@ use warnings;
 use App::http2http;
 
 
-sub usage {
-    die "Usage: $0\n";
-};
-
-
 my $proxy = App::http2http->new;
 
 $proxy->{filter} = sub {
