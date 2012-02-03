@@ -15,10 +15,10 @@ $proxy->{filter} = sub {
     my ($self, $headers, $request) = @_;
     my $endpoint = $headers->header('X-EndPoint-URL');
     if ($endpoint) {
-        $endpoint->scheme('https');
         $request->uri($endpoint);
         $headers->remove_header('X-EndPoint-URL');
     };
+    $request->uri->scheme('https');
 };
 
 $proxy->start;
