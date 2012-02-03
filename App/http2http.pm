@@ -39,7 +39,7 @@ sub new {
 
     my ($opt, $usage) = describe_options(
         "$0 %o",
-        [ 'host|s=s',     "local host bind address", { default => '127.0.0.1' } ],
+        [ 'host|b=s',     "local host bind address", { default => '127.0.0.1' } ],
         [ 'port|p=i',     "local port bind address", { default => 8080 } ],
         [ 'anonymize|a',  "no Via and X-Forwarded-For headers", ],
         [ 'eval|e=s',     "filter as Perl eval code", ],
@@ -52,6 +52,8 @@ sub new {
     );
 
     print($usage->text), exit if $opt->help;
+
+    $args{argv} = \@ARGV;
 
     my $logger = $opt->daemonize ? 'Logfile' : 'Screen';
 
@@ -119,6 +121,16 @@ sub start {
             }
         ),
     );
+
+    $proxy->push_filter(
+        mime => '*/*',
+        request => HTTP::Proxy::HeaderFilter::simple->new(
+            sub {
+                my ($self, $headers, $request) = @_;
+                $headers->remove_header(qw(X-Forwarded-For X-Forwarded-Host X-Forwarded-Server));
+            }
+        ),
+    ) if $self->{anonymize};
 
     $proxy->push_filter(
         mime => '*/*',
