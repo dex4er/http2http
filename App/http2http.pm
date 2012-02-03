@@ -39,7 +39,7 @@ sub new {
 
     my ($opt, $usage) = describe_options(
         "$0 %o",
-        [ 'host|s=s',     "local host bind address", { default => '127.0.0.1' } ],
+        [ 'host|b=s',     "local host bind address", { default => '127.0.0.1' } ],
         [ 'port|p=i',     "local port bind address", { default => 8080 } ],
         [ 'anonymize|a',  "no Via and X-Forwarded-For headers", ],
         [ 'eval|e=s',     "filter as Perl eval code", ],
