@@ -53,6 +53,8 @@ sub new {
 
     print($usage->text), exit if $opt->help;
 
+    $args{argv} = \@ARGV;
+
     my $logger = $opt->daemonize ? 'Logfile' : 'Screen';
 
     my $logconf = {
