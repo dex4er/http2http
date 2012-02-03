@@ -130,6 +130,12 @@ sub start {
                 $headers->remove_header(qw(Via X-Forwarded-For X-Forwarded-Host X-Forwarded-Server));
             }
         ),
+        response => HTTP::Proxy::HeaderFilter::simple->new(
+            sub {
+                my ($self, $headers, $response) = @_;
+                $headers->remove_header(qw(Via X-Forwarded-For X-Forwarded-Host X-Forwarded-Server));
+            }
+        ),
     ) if $self->{anonymize};
 
     $proxy->push_filter(
