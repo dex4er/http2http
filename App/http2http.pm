@@ -127,7 +127,7 @@ sub start {
         request => HTTP::Proxy::HeaderFilter::simple->new(
             sub {
                 my ($self, $headers, $request) = @_;
-                $headers->remove_header(qw(X-Forwarded-For X-Forwarded-Host X-Forwarded-Server));
+                $headers->remove_header(qw(Via X-Forwarded-For X-Forwarded-Host X-Forwarded-Server));
             }
         ),
     ) if $self->{anonymize};
