@@ -125,6 +125,16 @@ sub start {
     $proxy->push_filter(
         mime => '*/*',
         request => HTTP::Proxy::HeaderFilter::simple->new(
+            sub {
+                my ($self, $headers, $request) = @_;
+                $headers->remove_header(qw(X-Forwarded-For X-Forwarded-Host X-Forwarded-Server));
+            }
+        ),
+    ) if $self->{anonymize};
+
+    $proxy->push_filter(
+        mime => '*/*',
+        request => HTTP::Proxy::HeaderFilter::simple->new(
             $self->{filter}
         ),
     );
