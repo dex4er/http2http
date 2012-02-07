@@ -1,0 +1,86 @@
+#!/bin/sh
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+RETVAL=0
+app="http2http"
+
+# Source http2http configureation
+if [ -f /etc/sysconfig/http2http ] ; then
+        . /etc/sysconfig/http2http
+fi
+
+HTTP2HTTP_PIDFILE="${HTTP2HTTP_PIDFILE:-/var/run/http2http.pid}"
+HTTP2HTTP_LOGFILE="${HTTP2HTTP_LOGFILE:-/var/log/http2http.log}"
+
+
+start()
+{
+        echo -n "Starting $app:"
+
+        $app -D -P $HTTP2HTTP_PIDFILE -l $HTTP2HTTP_LOGFILE $HTTP2HTTP_ARGS
+        RETVAL=$?
+
+        if [ $RETVAL = 0 ]; then
+            success
+        else
+            failure
+        fi
+        echo
+}
+
+
+stop()
+{
+        PID=`cat $HTTP2HTTP_PIDFILE 2>/dev/null`
+
+        echo -n "Stopping $app:"
+
+        if [ -n "$PID" ] && [ -d /proc/$PID ] && grep -qs "$app" /proc/$PID/cmdline; then
+            kill $PID && rm -f $HTTP2HTTP_PIDFILE 2>/dev/null
+            sleep 3
+            kill -9 $PID 2>/dev/null && rm -f $HTTP2HTTP_PIDFILE
+        fi
+        RETVAL=0
+        success
+        echo
+}
+
+
+status()
+{
+        PID=`cat $HTTP2HTTP_PIDFILE 2>/dev/null`
+
+        if [ -n "$PID" ] && [ -d /proc/$PID ] && grep -qs "$app" /proc/$PID/cmdline; then
+            echo "$app (pid $PID) is running..."
+            return 0
+        else
+            echo "$app is stopped"
+            return 1
+        fi
+}
+
+
+case "$1" in
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        restart)
+                stop
+                sleep 1
+                start
+                ;;
+        status)
+                status
+                RETVAL=$?
+                ;;
+        *)
+                echo $"Usage: $0 {start|stop|restart|status}"
+                RETVAL=1
+esac
+
+exit $RETVAL

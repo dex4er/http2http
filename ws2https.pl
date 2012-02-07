@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# WS to HTTP proxy server
+# WS to HTTPS proxy server
 
 
 use strict;
@@ -18,6 +18,7 @@ $proxy->{filter} = sub {
         $request->uri($endpoint);
         $headers->remove_header('X-EndPoint-URL');
     };
+    $request->uri->scheme('https');
 };
 
 $proxy->start;
