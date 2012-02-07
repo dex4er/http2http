@@ -47,6 +47,7 @@ sub new {
         [ 'uid|U',        "daemon user",             { default => $> } ],
         [ 'gid|G',        "daemon group",            { default => $) } ],
         [ 'pidfile|P=s',  "pid file",                { default => File::Spec->rel2abs("$name.pid") } ],
+        [ 'log|l=s',      "log file", ],
         [ 'log4perl|L=s', "log4perl configuration file", ],
         [ 'help',         "print usage message and exit" ],
     );
@@ -55,13 +56,12 @@ sub new {
 
     $args{argv} = \@ARGV;
 
-    my $logger = $opt->daemonize ? 'Logfile' : 'Screen';
+    my $logger = ($opt->daemonize || $opt->log) ? 'Logfile' : 'Screen';
 
     my $logconf = {
         'log4perl.logger'                     => "DEBUG, $logger",
-        'log4perl.appender.Logfile'           => 'Log::Dispatch::File::Stamped',
-        'log4perl.appender.Logfile.stamp_fmt' => '%Y-%m-%d',
-        'log4perl.appender.Logfile.filename'  => File::Spec->rel2abs("$name.log"),
+        'log4perl.appender.Logfile'           => 'Log::Log4perl::Appender::File',
+        'log4perl.appender.Logfile.filename'  => $opt->log || File::Spec->rel2abs("$name.log"),
         'log4perl.appender.Logfile.layout'    => 'PatternLayout',
         'log4perl.appender.Logfile.layout.ConversionPattern' => '%d{ISO8601}: %c: %m{chomp}%n',
         'log4perl.appender.Screen'            => 'Log::Log4perl::Appender::Screen',
